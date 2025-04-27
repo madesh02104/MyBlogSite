@@ -1,15 +1,48 @@
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
-// Get all published posts
+// Get posts based on user role
 export const getAllPosts = async (req, res) => {
   try {
+    let isAdmin = req.user && req.user.isAdmin;
+
+    // If not authenticated through middleware, check token directly
+    if (
+      !req.user &&
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      try {
+        const token = req.headers.authorization.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Get user info to check admin status
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+          select: { isAdmin: true },
+        });
+
+        isAdmin = user && user.isAdmin;
+      } catch (err) {
+        // Token verification failed, user is not admin
+        isAdmin = false;
+      }
+    }
+
+    // Define query conditions
+    const whereCondition = isAdmin
+      ? {} // Admin sees all posts
+      : { published: true };
+
     const posts = await prisma.post.findMany({
-      where: {
-        published: true,
+      where: whereCondition,
+      orderBy: {
+        createdAt: "desc",
       },
     });
+
     res.json(posts);
   } catch (error) {
     res
@@ -84,23 +117,26 @@ export const createPost = async (req, res) => {
 export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content } = req.body;
+    const { title, content, published } = req.body;
 
     // Check if post exists
     const existingPost = await prisma.post.findUnique({
-      where: { id: Number(id) },
+      where: { id: id },
     });
 
     if (!existingPost) {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    // Create update data object
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (content !== undefined) updateData.content = content;
+    if (published !== undefined) updateData.published = published;
+
     const updatedPost = await prisma.post.update({
-      where: { id: Number(id) },
-      data: {
-        title: title || existingPost.title,
-        content: content || existingPost.content,
-      },
+      where: { id: id },
+      data: updateData,
     });
 
     res.json(updatedPost);
@@ -118,7 +154,7 @@ export const deletePost = async (req, res) => {
 
     // Check if post exists
     const post = await prisma.post.findUnique({
-      where: { id: Number(id) },
+      where: { id: id },
     });
 
     if (!post) {
@@ -126,7 +162,7 @@ export const deletePost = async (req, res) => {
     }
 
     await prisma.post.delete({
-      where: { id: Number(id) },
+      where: { id: id },
     });
 
     res.json({ message: "Post deleted successfully" });
@@ -144,7 +180,7 @@ export const publishPost = async (req, res) => {
 
     // Check if post exists
     const post = await prisma.post.findUnique({
-      where: { id: Number(id) },
+      where: { id: id },
     });
 
     if (!post) {
@@ -152,7 +188,7 @@ export const publishPost = async (req, res) => {
     }
 
     const updatedPost = await prisma.post.update({
-      where: { id: Number(id) },
+      where: { id: id },
       data: {
         published: true,
       },

@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: [process.env["FRONTEND-USER-URL"], process.env["FRONTEND-ADMIN-URL"]],
   credentials: true,
 };
 

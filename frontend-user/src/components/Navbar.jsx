@@ -1,15 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "../api/axios"; // Import axios to get the config
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [adminUrl, setAdminUrl] = useState("#"); // Default fallback value
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // Fetch admin URL from backend config if available
+    const fetchAdminUrl = async () => {
+      try {
+        const response = await axios.get("/config");
+        if (response.data && response.data.adminUrl) {
+          setAdminUrl(response.data.adminUrl);
+        }
+      } catch (error) {
+        console.log("Using default admin URL");
+        // If API not available, use fallback from environment variables at build time
+        setAdminUrl(import.meta.env.VITE_ADMIN_URL || "http://localhost:5173");
+      }
+    };
+
+    fetchAdminUrl();
+
+    // Rest of the existing effect code
     const user = localStorage.getItem("user");
     if (user && localStorage.getItem("token")) {
       setIsLoggedIn(true);
@@ -51,7 +70,7 @@ function Navbar() {
           Home
         </Link>
         <a
-          href="http://localhost:5174"
+          href={adminUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-violet-400 transition-colors duration-200 font-medium"
