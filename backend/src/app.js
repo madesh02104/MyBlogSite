@@ -11,9 +11,14 @@ dotenv.config();
 
 const app = express();
 
+console.log("DEBUG: FRONTEND_USER_URL:", process.env["FRONTEND_USER_URL"]);
+console.log("DEBUG: FRONTEND_ADMIN_URL:", process.env["FRONTEND_ADMIN_URL"]);
+
 const corsOptions = {
   origin: [process.env["FRONTEND_USER_URL"], process.env["FRONTEND_ADMIN_URL"]],
   credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Explicitly allow methods
+  allowedHeaders: "Content-Type,Authorization", // Explicitly allow requested headers
 };
 
 // Middlewares
