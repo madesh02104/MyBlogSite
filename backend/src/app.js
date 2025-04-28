@@ -6,6 +6,7 @@ import commentRoutes from "./routes/commentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import configRouts from "./routes/configRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(morgan("dev"));
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/config", configRoutes);
 
 // 404 handler
 app.use((req, res) => {
