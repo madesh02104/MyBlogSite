@@ -41,7 +41,9 @@ function BlogsSection() {
             className="bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] border border-gray-700"
           >
             <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
-            <p className="text-gray-300 mb-4 line-clamp-3">{post.content}</p>
+            <p className="text-gray-300 mb-4 line-clamp-3 whitespace-pre-wrap">
+              {post.content}
+            </p>
             <Link
               to={`/blog/${post.id}`}
               className="text-violet-400 hover:text-violet-300 inline-flex items-center group"

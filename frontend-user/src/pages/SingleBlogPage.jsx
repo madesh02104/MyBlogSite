@@ -87,7 +87,9 @@ function SingleBlogPage() {
               : "Unknown date"}
           </span>
         </p>
-        <div className="text-lg leading-7 text-gray-300">{blog.content}</div>
+        <div className="text-lg leading-7 text-gray-300 whitespace-pre-wrap">
+          {blog.content}
+        </div>
       </div>
 
       {/* Comments Section */}
