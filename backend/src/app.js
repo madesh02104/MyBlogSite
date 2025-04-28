@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: [process.env["FRONTEND-USER-URL"], process.env["FRONTEND-ADMIN-URL"]],
+  origin: [process.env["FRONTEND_USER_URL"], process.env["FRONTEND_ADMIN_URL"]],
   credentials: true,
 };
 
