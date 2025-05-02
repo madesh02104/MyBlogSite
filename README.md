@@ -1,2 +1,3 @@
 # MyBlogSite
-Blog site created for working with restAPIs from the odin project.
+
+My personal blog site live at: https://madesh-blogs-user.netlify.app
