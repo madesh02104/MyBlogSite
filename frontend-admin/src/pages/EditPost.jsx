@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function EditPost() {
   const { id } = useParams();
@@ -16,6 +19,7 @@ function EditPost() {
   const [deleteCommentId, setDeleteCommentId] = useState(null);
   const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
   const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -161,21 +165,66 @@ function EditPost() {
           </div>
 
           <div>
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-gray-300 mb-1"
-            >
-              Post Content
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label
+                htmlFor="content"
+                className="block text-sm font-medium text-gray-300"
+              >
+                Post Content (Markdown supported)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-sm text-violet-400 hover:text-violet-300"
+              >
+                {showPreview ? "Hide Preview" : "Show Preview"}
+              </button>
+            </div>
             <textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows="12"
-              className="w-full bg-gray-700 border border-gray-600 p-2 rounded-md text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-              placeholder="Write your post content here..."
+              className="w-full bg-gray-700 border border-gray-600 p-2 rounded-md text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent font-mono"
+              placeholder="Write your post content here using Markdown..."
               required
             ></textarea>
+            {showPreview && (
+              <div className="mt-4 p-4 bg-gray-700 rounded-md border border-gray-600">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">
+                  Preview:
+                </h3>
+                <div className="prose prose-invert prose-violet max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || "");
+                        return !inline && match ? (
+                          <SyntaxHighlighter
+                            style={vscDarkPlus}
+                            language={match[1]}
+                            PreTag="div"
+                            className="rounded-lg"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, "")}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code
+                            className="bg-gray-600 px-1.5 py-0.5 rounded text-violet-300"
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {content || "*No content yet*"}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center">
