@@ -1,2 +1,3 @@
 node_modules
 .env
+CONTAINERIZED_README.md
