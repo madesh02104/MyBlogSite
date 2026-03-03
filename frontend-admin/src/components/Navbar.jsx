@@ -18,7 +18,7 @@ function Navbar() {
         if (response.data && response.data.userUrl) {
           setUserSiteUrl(response.data.userUrl);
         }
-      } catch (error) {
+      } catch (_error) {
         console.log("Using default user site URL");
         // If API not available, use fallback from environment variables at build time
         setUserSiteUrl(
