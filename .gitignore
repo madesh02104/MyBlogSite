@@ -1,3 +1,6 @@
 node_modules
 .env
-CONTAINERIZATION_EXPLAINED.md
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform.lock.hcl
