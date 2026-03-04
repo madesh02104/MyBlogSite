@@ -84,3 +84,59 @@ jobs:
           tags: |
             ghcr.io/${{ env.REPO_LOWER }}/admin-frontend:latest
             ghcr.io/${{ env.REPO_LOWER }}/admin-frontend:${{ github.sha }}
+
+  deploy:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase repository name
+        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Copy prod compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: /home/ubuntu/app/
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          REPO_LOWER: ${{ env.REPO_LOWER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: GHCR_TOKEN,GITHUB_ACTOR,REPO_LOWER,DB_PASSWORD,JWT_SECRET,EC2_HOST
+          script: |
+            echo $GHCR_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+            mkdir -p /home/ubuntu/app
+
+            cat > /home/ubuntu/app/.env << EOF
+            DB_PASSWORD=$DB_PASSWORD
+            JWT_SECRET=$JWT_SECRET
+            EC2_HOST=$EC2_HOST
+            REPO_LOWER=$REPO_LOWER
+            EOF
+
+            docker pull ghcr.io/$REPO_LOWER/backend:latest
+            docker pull ghcr.io/$REPO_LOWER/user-frontend:latest
+            docker pull ghcr.io/$REPO_LOWER/admin-frontend:latest
+
+            cd /home/ubuntu/app
+            docker compose -f docker-compose.prod.yml down --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d
+
+            docker image prune -f

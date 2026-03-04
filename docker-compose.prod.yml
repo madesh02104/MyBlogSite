@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: blog_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/${REPO_LOWER}/backend:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/blog_db?schema=public
+      - PORT=3000
+      - FRONTEND_USER_URL=http://${EC2_HOST}:4001
+      - FRONTEND_ADMIN_URL=http://${EC2_HOST}:4000
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  user-frontend:
+    image: ghcr.io/${REPO_LOWER}/user-frontend:latest
+    restart: always
+    ports:
+      - "4001:80"
+    depends_on:
+      - backend
+
+  admin-frontend:
+    image: ghcr.io/${REPO_LOWER}/admin-frontend:latest
+    restart: always
+    ports:
+      - "4000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
