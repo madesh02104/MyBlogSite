@@ -83,8 +83,9 @@ resource "aws_instance" "blog_server" {
   instance_type          = "t3.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.blog_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.blog_ec2_profile.name
-  monitoring             = false
+  iam_instance_profile          = aws_iam_instance_profile.blog_ec2_profile.name
+  monitoring                    = false
+  user_data_replace_on_change   = true
 
   credit_specification {
     cpu_credits = "standard"
@@ -98,7 +99,8 @@ resource "aws_instance" "blog_server" {
 
   user_data = <<-EOF
     #!/bin/bash
-    set -ex
+    export DEBIAN_FRONTEND=noninteractive
+    export NEEDRESTART_MODE=a
 
     apt-get update -y
     apt-get install -y ca-certificates curl gnupg wget
@@ -116,9 +118,12 @@ resource "aws_instance" "blog_server" {
     mkdir -p /var/log/nginx/user
     chmod 755 /var/log/nginx/user
 
-    wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
-    dpkg -i amazon-cloudwatch-agent.deb
-    rm -f amazon-cloudwatch-agent.deb
+    for i in 1 2 3 4 5; do
+      wget -q -O /tmp/amazon-cloudwatch-agent.deb https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb && break
+      sleep 15
+    done
+    dpkg -i /tmp/amazon-cloudwatch-agent.deb
+    rm -f /tmp/amazon-cloudwatch-agent.deb
 
     cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWCONFIG'
     {
