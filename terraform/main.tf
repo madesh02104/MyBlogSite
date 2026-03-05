@@ -83,11 +83,26 @@ resource "aws_instance" "blog_server" {
   instance_type          = "t3.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.blog_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.blog_ec2_profile.name
+  monitoring             = false
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  root_block_device {
+    volume_size           = 20
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
 
   user_data = <<-EOF
     #!/bin/bash
+    set -ex
+
     apt-get update -y
-    apt-get install -y ca-certificates curl gnupg
+    apt-get install -y ca-certificates curl gnupg wget
+
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     chmod a+r /etc/apt/keyrings/docker.gpg
@@ -97,6 +112,40 @@ resource "aws_instance" "blog_server" {
     usermod -aG docker ubuntu
     systemctl enable docker
     systemctl start docker
+
+    mkdir -p /var/log/nginx/user
+    chmod 755 /var/log/nginx/user
+
+    wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+    dpkg -i amazon-cloudwatch-agent.deb
+    rm -f amazon-cloudwatch-agent.deb
+
+    cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWCONFIG'
+    {
+      "agent": {
+        "metrics_collection_interval": 300,
+        "run_as_user": "root"
+      },
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {
+                "file_path": "/var/log/nginx/user/access.log",
+                "log_group_name": "/blog/nginx/access",
+                "log_stream_name": "{instance_id}",
+                "retention_in_days": 7
+              }
+            ]
+          }
+        }
+      }
+    }
+    CWCONFIG
+
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config -m ec2 -s \
+      -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
   EOF
 
   tags = {
@@ -137,4 +186,127 @@ resource "aws_s3_bucket_policy" "blog_images_public_read" {
   })
 
   depends_on = [aws_s3_bucket_public_access_block.blog_images]
+}
+
+resource "aws_iam_role" "blog_ec2_role" {
+  name = "blog-ec2-cloudwatch-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cloudwatch_logs" {
+  name = "cloudwatch-logs-policy"
+  role = aws_iam_role.blog_ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "blog_ec2_profile" {
+  name = "blog-ec2-profile"
+  role = aws_iam_role.blog_ec2_role.name
+}
+
+resource "aws_cloudwatch_log_group" "nginx_access" {
+  name              = "/blog/nginx/access"
+  retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_metric_filter" "visitor_hits" {
+  name           = "VisitorHits"
+  pattern        = "[ip, id, user, timestamp, request, status_code, size, ...]"
+  log_group_name = aws_cloudwatch_log_group.nginx_access.name
+
+  metric_transformation {
+    name          = "VisitorHitCount"
+    namespace     = "Blog/Nginx"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_dashboard" "blog" {
+  dashboard_name = "BlogMonitoring"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["Blog/Nginx", "VisitorHitCount", { stat = "Sum", period = 300 }]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "Visitor Hits (5 min)"
+          period  = 300
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/EC2", "CPUUtilization", "InstanceId", aws_instance.blog_server.id, { stat = "Average", period = 300 }]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "CPU Utilization"
+          period  = 300
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/EC2", "NetworkIn", "InstanceId", aws_instance.blog_server.id, { stat = "Sum", period = 300 }],
+            ["AWS/EC2", "NetworkOut", "InstanceId", aws_instance.blog_server.id, { stat = "Sum", period = 300 }]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "Network Traffic"
+          period  = 300
+        }
+      }
+    ]
+  })
 }
