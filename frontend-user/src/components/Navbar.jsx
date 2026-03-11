@@ -52,7 +52,7 @@ function Navbar() {
           Home
         </Link>
         <a
-          href={`http://${window.location.hostname}:4000`}
+          href="https://admin.blogsbymadesh.live"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-violet-400 transition-colors duration-200 font-medium"
