@@ -50,22 +50,8 @@ resource "aws_security_group" "blog_sg" {
   }
 
   ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 4000
-    to_port     = 4000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 4001
-    to_port     = 4001
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -155,6 +141,15 @@ resource "aws_instance" "blog_server" {
 
   tags = {
     Name = "blog-server"
+  }
+}
+
+resource "aws_eip" "blog_eip" {
+  instance = aws_instance.blog_server.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "blog-eip"
   }
 }
 
