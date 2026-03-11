@@ -4,6 +4,7 @@ import cors from "cors";
 import postRoutes from "./routes/postRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 
@@ -43,6 +44,7 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });

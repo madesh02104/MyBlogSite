@@ -34,6 +34,8 @@ services:
       - FRONTEND_USER_URL=http://${EC2_HOST}:4001
       - FRONTEND_ADMIN_URL=http://${EC2_HOST}:4000
       - JWT_SECRET=${JWT_SECRET}
+      - AWS_REGION=ap-south-1
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     depends_on:
       db:
         condition: service_healthy

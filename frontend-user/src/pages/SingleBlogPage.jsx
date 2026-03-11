@@ -114,6 +114,15 @@ function SingleBlogPage() {
                   </code>
                 );
               },
+              img({ src, alt }) {
+                return (
+                  <img
+                    src={src}
+                    alt={alt}
+                    className="max-w-full rounded-lg my-4 mx-auto block"
+                  />
+                );
+              },
             }}
           >
             {blog.content}

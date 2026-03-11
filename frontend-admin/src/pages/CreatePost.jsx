@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +13,52 @@ function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await axios.post("/upload", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const markdownImage = `![image](${response.data.url})`;
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent =
+        content.substring(0, start) +
+        markdownImage +
+        content.substring(end);
+      setContent(newContent);
+
+      setTimeout(() => {
+        textarea.selectionStart = start + markdownImage.length;
+        textarea.selectionEnd = start + markdownImage.length;
+        textarea.focus();
+      }, 0);
+    } catch (err) {
+      setUploadError(err.response?.data?.message || "Failed to upload image");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,15 +126,36 @@ function CreatePost() {
               >
                 Post Content (Markdown supported)
               </label>
-              <button
-                type="button"
-                onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-violet-400 hover:text-violet-300"
-              >
-                {showPreview ? "Hide Preview" : "Show Preview"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  disabled={uploading}
+                  className="text-sm text-violet-400 hover:text-violet-300 disabled:opacity-50 flex items-center gap-1"
+                >
+                  {uploading ? "Uploading..." : "Insert Image"}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="text-sm text-violet-400 hover:text-violet-300"
+                >
+                  {showPreview ? "Hide Preview" : "Show Preview"}
+                </button>
+              </div>
             </div>
+            {uploadError && (
+              <p className="text-sm text-red-400 mb-1">{uploadError}</p>
+            )}
             <textarea
+              ref={textareaRef}
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}

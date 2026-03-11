@@ -227,6 +227,14 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
           "logs:DescribeLogGroups"
         ]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}/posts/*"
       }
     ]
   })

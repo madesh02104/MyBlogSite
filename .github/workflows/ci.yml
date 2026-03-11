@@ -114,11 +114,12 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: GHCR_TOKEN,GITHUB_ACTOR,REPO_LOWER,DB_PASSWORD,JWT_SECRET,EC2_HOST
+          envs: GHCR_TOKEN,GITHUB_ACTOR,REPO_LOWER,DB_PASSWORD,JWT_SECRET,EC2_HOST,S3_BUCKET_NAME
           script: |
             echo $GHCR_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
@@ -129,13 +130,14 @@ jobs:
             JWT_SECRET=$JWT_SECRET
             EC2_HOST=$EC2_HOST
             REPO_LOWER=$REPO_LOWER
+            S3_BUCKET_NAME=$S3_BUCKET_NAME
             EOF
 
             docker pull ghcr.io/$REPO_LOWER/backend:latest
             docker pull ghcr.io/$REPO_LOWER/user-frontend:latest
             docker pull ghcr.io/$REPO_LOWER/admin-frontend:latest
 
-            cd /home/ubuntu/app
+            cd /home/ubuntu/app`
             docker compose -f docker-compose.prod.yml down --remove-orphans
             docker compose -f docker-compose.prod.yml up -d
 
