@@ -35,7 +35,7 @@ function SingleBlogPage() {
   }, [id]);
 
   const isLoggedIn = Boolean(
-    localStorage.getItem("user") && localStorage.getItem("token")
+    localStorage.getItem("user") && localStorage.getItem("token"),
   );
 
   const handleCommentSubmit = async (e) => {
@@ -55,7 +55,7 @@ function SingleBlogPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       setComments([...comments, newComment.data]);
