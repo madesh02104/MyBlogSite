@@ -1,10 +1,12 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import postRoutes from "./routes/postRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import { visitorTracker } from "./middlewares/visitorMiddleware.js";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 
@@ -21,8 +23,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(visitorTracker);
 
 app.get("/api/health", async (_req, res) => {
   try {

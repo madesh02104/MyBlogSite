@@ -224,6 +224,11 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
+        Resource = "*"
+      },
+      {
         Effect = "Allow"
         Action = [
           "s3:PutObject",
@@ -245,18 +250,6 @@ resource "aws_cloudwatch_log_group" "nginx_access" {
   retention_in_days = 7
 }
 
-resource "aws_cloudwatch_log_metric_filter" "visitor_hits" {
-  name           = "VisitorHits"
-  pattern        = "[ip, id, user, timestamp, request, status_code, size, ...]"
-  log_group_name = aws_cloudwatch_log_group.nginx_access.name
-
-  metric_transformation {
-    name          = "VisitorHitCount"
-    namespace     = "Blog/Nginx"
-    value         = "1"
-    default_value = "0"
-  }
-}
 
 resource "aws_cloudwatch_dashboard" "blog" {
   dashboard_name = "BlogMonitoring"
@@ -271,12 +264,12 @@ resource "aws_cloudwatch_dashboard" "blog" {
         height = 6
         properties = {
           metrics = [
-            ["Blog/Nginx", "VisitorHitCount", { stat = "Sum", period = 300 }]
+            ["Blog/Visitors", "UniqueVisitorCount", { stat = "Sum", period = 300 }]
           ]
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
-          title   = "Visitor Hits (5 min)"
+          title   = "Unique Visitors (5 min)"
           period  = 300
         }
       },
@@ -301,7 +294,7 @@ resource "aws_cloudwatch_dashboard" "blog" {
         type   = "metric"
         x      = 0
         y      = 6
-        width  = 12
+        width  = 24
         height = 6
         properties = {
           metrics = [
