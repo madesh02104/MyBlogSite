@@ -1,20 +1,19 @@
 function Footer() {
   return (
-    <footer className="bg-gray-800 text-gray-300 py-4 shadow-inner">
+    <footer className="bg-surface text-muted py-4 shadow-inner">
       <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
         <div className="mb-4 md:mb-0 text-center md:text-left">
           &copy; 2025AD MyBlogSite. No rights reserved.
         </div>
 
         <div className="flex items-center space-x-6">
-          <p>Made with care by Madesh :)</p>
           <div className="flex space-x-4">
             {/* GitHub */}
             <a
               href="https://github.com/madesh02104"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors duration-200"
+              className="text-muted hover:text-text transition-colors duration-200"
               aria-label="GitHub"
             >
               <svg
@@ -35,7 +34,7 @@ function Footer() {
               href="https://x.com/madesh02104"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors duration-200"
+              className="text-muted hover:text-text transition-colors duration-200"
               aria-label="X (Twitter)"
             >
               <svg

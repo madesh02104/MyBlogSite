@@ -29,32 +29,29 @@ function BlogsSection() {
   }, []);
 
   if (loading)
-    return <div className="text-center mt-10 text-white">Loading...</div>;
+    return <div className="text-center mt-10 text-text">Loading...</div>;
   if (error)
-    return <div className="text-center mt-10 text-red-400">{error}</div>;
+    return <div className="text-center mt-10 text-danger">{error}</div>;
 
   return (
-    <div
-      id="blogs"
-      className="max-w-4xl mx-auto px-4 py-6 text-white"
-    >
+    <div id="blogs" className="max-w-4xl mx-auto px-4 py-6 text-text">
       <h1 className="text-3xl font-bold mb-4 text-center">Latest Blogs</h1>
       <div className="flex flex-col gap-2">
         {posts.map((post) => (
           <Link
             key={post.id}
             to={`/blog/${post.id}`}
-            className="flex items-center justify-between bg-gray-800 px-4 py-3 rounded-lg border border-gray-700 hover:border-violet-500 transition-all duration-200 group"
+            className="flex items-center justify-between bg-surface px-4 py-3 rounded-lg border border-border hover:border-accent transition-all duration-200 group"
           >
             <div className="flex flex-col">
-              <span className="text-white text-2xl font-semibold group-hover:text-violet-400 transition-colors duration-200 leading-tight">
+              <span className="text-text text-2xl font-semibold group-hover:text-accent transition-colors duration-200 leading-tight">
                 {post.title}
               </span>
-              <span className="text-gray-400 text-sm mt-1">
+              <span className="text-muted text-sm mt-1">
                 {getReadTime(post.content)} min read
               </span>
             </div>
-            <span className="text-gray-400 text-sm whitespace-nowrap ml-6">
+            <span className="text-muted text-sm whitespace-nowrap ml-6">
               {new Date(post.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",

@@ -1,104 +1,77 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    // Get user information from localStorage
-    const user = localStorage.getItem("user");
-    if (user && localStorage.getItem("token")) {
-      setIsLoggedIn(true);
-      setUsername(user);
-    } else {
-      setIsLoggedIn(false);
-      setUsername("");
-    }
-  }, [location]);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setDropdownOpen(false);
-    navigate("/");
-  };
-
+function Navbar({ theme, onToggleTheme }) {
   return (
-    <nav className="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md">
-      {/* Left Side */}
-      <div className="flex items-center gap-4">
+    <nav className="bg-surface text-text px-6 py-4 flex items-center justify-between border-b border-border">
+      <div className="flex items-center gap-6">
         <Link
           to="/"
-          className="hover:text-violet-400 transition-colors duration-200 font-medium"
+          aria-label="Home"
+          className="text-muted hover:text-accent transition-colors duration-200"
         >
-          Home
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
+            aria-hidden="true"
+          >
+            <path d="M3 11.5L12 4l9 7.5" />
+            <path d="M5.5 10.5V20h13V10.5" />
+            <path d="M9.5 20v-6h5v6" />
+          </svg>
         </Link>
-        <a
-          href="https://admin.blogsbymadesh.live"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-violet-400 transition-colors duration-200 font-medium"
-        >
-          Admin Dashboard
-        </a>
       </div>
 
-      {/* Right Side */}
-      <div className="flex items-center gap-4">
-        {isLoggedIn ? (
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="bg-violet-700 hover:bg-violet-600 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200 transform hover:scale-105"
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="p-2 rounded-md border border-border bg-bg text-muted hover:text-accent hover:border-accent transition-colors duration-200"
+          aria-label="Toggle color theme"
+        >
+          {theme === "dark" ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+              aria-hidden="true"
             >
-              {username.charAt(0).toUpperCase()}
-            </button>
-
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10 border border-gray-600">
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-violet-700 transition-colors duration-200"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            <Link
-              to="/login"
-              className="hover:text-violet-400 transition-colors duration-200 font-medium"
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="M4.93 4.93l1.41 1.41" />
+              <path d="M17.66 17.66l1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="M4.93 19.07l1.41-1.41" />
+              <path d="M17.66 6.34l1.41-1.41" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+              aria-hidden="true"
             >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-            >
-              Register
-            </Link>
-          </>
-        )}
+              <path d="M21 12.3A8.2 8.2 0 1 1 11.7 3a7 7 0 0 0 9.3 9.3z" />
+            </svg>
+          )}
+        </button>
       </div>
     </nav>
   );
