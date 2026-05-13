@@ -6,11 +6,12 @@ const prisma = new PrismaClient();
 export const createComment = async (req, res) => {
   try {
     const { postId } = req.params;
-    const { content } = req.body;
-    const userId = req.user.id;
+    const { content, authorName } = req.body;
 
-    if (!content) {
-      return res.status(400).json({ message: "Comment content is required" });
+    if (!content?.trim() || !authorName?.trim()) {
+      return res
+        .status(400)
+        .json({ message: "Comment content and author name are required" });
     }
 
     // Check if post exists
@@ -24,12 +25,10 @@ export const createComment = async (req, res) => {
 
     const comment = await prisma.comment.create({
       data: {
-        content,
+        content: content.trim(),
+        authorName: authorName.trim(),
         post: {
           connect: { id: postId },
-        },
-        author: {
-          connect: { id: userId },
         },
       },
       include: {
