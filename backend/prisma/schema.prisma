@@ -34,11 +34,12 @@ model Post {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  content   String
-  createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
+  id         String   @id @default(uuid())
+  content    String
+  authorName String   @default("Anonymous")
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+  postId     String
+  author     User?    @relation(fields: [authorId], references: [id])
+  authorId   String?
 }
