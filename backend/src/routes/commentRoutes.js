@@ -1,5 +1,4 @@
-import { protect } from "../middlewares/authMiddleware.js";
-import { admin } from "../middlewares/authMiddleware.js";
+import { protect, admin } from "../middlewares/authMiddleware.js";
 import {
   createComment,
   deleteComment,
@@ -7,7 +6,7 @@ import {
 import express from "express";
 const router = express.Router();
 
-router.post("/:postId", protect, createComment);
+router.post("/:postId", createComment);
 
 router.delete("/:id", protect, admin, deleteComment);
 
