@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { fallbackPosts } from "../utils/fallbackPosts.js";
 
 const prisma = new PrismaClient();
 
@@ -45,6 +46,17 @@ export const getAllPosts = async (req, res) => {
 
     res.json(posts);
   } catch (error) {
+    if (
+      error.message &&
+      error.message.includes("Can't reach database server")
+    ) {
+      const isAdmin = req.user && req.user.isAdmin;
+      const fallback = isAdmin
+        ? fallbackPosts
+        : fallbackPosts.filter((post) => post.published);
+      return res.json(fallback);
+    }
+
     res
       .status(500)
       .json({ message: "Failed to fetch posts", error: error.message });
@@ -81,6 +93,20 @@ export const getPostById = async (req, res) => {
 
     res.json(post);
   } catch (error) {
+    if (
+      error.message &&
+      error.message.includes("Can't reach database server")
+    ) {
+      const fallbackPost = fallbackPosts.find(
+        (post) => post.id === req.params.id,
+      );
+      if (!fallbackPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      return res.json(fallbackPost);
+    }
+
     res
       .status(500)
       .json({ message: "Failed to fetch post", error: error.message });

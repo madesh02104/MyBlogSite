@@ -15,8 +15,15 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
+const allowedOrigins = [
+  process.env["FRONTEND_USER_URL"],
+  process.env["FRONTEND_ADMIN_URL"],
+  "http://localhost:5173",
+  "http://localhost:5174",
+].filter(Boolean);
+
 const corsOptions = {
-  origin: [process.env["FRONTEND_USER_URL"], process.env["FRONTEND_ADMIN_URL"]],
+  origin: allowedOrigins,
   credentials: true,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: "Content-Type,Authorization",
