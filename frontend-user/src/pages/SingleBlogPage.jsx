@@ -134,7 +134,7 @@ function SingleBlogPage() {
                   </SyntaxHighlighter>
                 ) : (
                   <code
-                    className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-900 border border-gray-200"
+                    className="bg-[var(--color-code-bg)] px-1.5 py-0.5 rounded text-[var(--color-code-text)] border border-[var(--color-code-border)]"
                     {...props}
                   >
                     {children}

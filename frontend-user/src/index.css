@@ -16,6 +16,9 @@
 	--color-accent-strong: #6d28d9;
 	--color-accent-soft: #4c1d95;
 	--color-danger: #f87171;
+	--color-code-bg: rgba(167, 139, 250, 0.14);
+	--color-code-text: var(--color-accent);
+	--color-code-border: rgba(167, 139, 250, 0.25);
 	--bg-gradient: none;
 }
 
@@ -35,6 +38,9 @@
 	--color-accent-strong: #7c4322;
 	--color-accent-soft: #efe1cf;
 	--color-danger: #c24141;
+	--color-code-bg: rgba(36, 28, 22, 0.08);
+	--color-code-text: var(--color-accent);
+	--color-code-border: rgba(36, 28, 22, 0.16);
 	--bg-gradient: none;
 }
 
