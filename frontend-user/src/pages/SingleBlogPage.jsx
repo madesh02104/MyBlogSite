@@ -134,7 +134,7 @@ function SingleBlogPage() {
                   </SyntaxHighlighter>
                 ) : (
                   <code
-                    className="bg-accent-soft px-1.5 py-0.5 rounded text-accent"
+                    className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-900 border border-gray-200"
                     {...props}
                   >
                     {children}
