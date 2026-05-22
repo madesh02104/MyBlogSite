@@ -3,6 +3,10 @@ import jwt from "jsonwebtoken";
 import { fallbackPosts } from "../utils/fallbackPosts.js";
 
 const prisma = new PrismaClient();
+const allowFallbackPosts =
+  process.env.ENABLE_FALLBACK_POSTS === "true" ||
+  process.env.NODE_ENV === "development" ||
+  process.env.NODE_ENV === "test";
 
 // Get posts based on user role
 export const getAllPosts = async (req, res) => {
@@ -100,6 +104,10 @@ export const getAllPosts = async (req, res) => {
       error.message &&
       error.message.includes("Can't reach database server")
     ) {
+      if (!allowFallbackPosts) {
+        return res.status(503).json({ message: "Database unavailable" });
+      }
+
       const isAdmin = req.user && req.user.isAdmin;
       const rawLimit = req.query.limit;
       const cursorCreatedAt = req.query.cursorCreatedAt;
@@ -186,6 +194,10 @@ export const getPostById = async (req, res) => {
       error.message &&
       error.message.includes("Can't reach database server")
     ) {
+      if (!allowFallbackPosts) {
+        return res.status(503).json({ message: "Database unavailable" });
+      }
+
       const fallbackPost = fallbackPosts.find(
         (post) => post.id === req.params.id,
       );
