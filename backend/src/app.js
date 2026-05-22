@@ -9,11 +9,16 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import { visitorTracker } from "./middlewares/visitorMiddleware.js";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, "../../frontend-user/dist");
 
 const allowedOrigins = [
   process.env["FRONTEND_USER_URL"],
@@ -34,6 +39,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(visitorTracker);
+app.use(express.static(distPath));
 
 app.get("/api/health", async (_req, res) => {
   try {
@@ -56,6 +62,14 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
+
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) {
+    return next();
+  }
+
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
