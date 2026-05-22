@@ -49,3 +49,13 @@ body {
 	background: var(--bg-gradient), var(--color-bg);
 	color: var(--color-text);
 }
+
+::selection {
+	background: var(--color-accent-strong);
+	color: #ffffff;
+}
+
+::-moz-selection {
+	background: var(--color-accent-strong);
+	color: #ffffff;
+}
