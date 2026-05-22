@@ -37,24 +37,113 @@ export const getAllPosts = async (req, res) => {
       ? {} // Admin sees all posts
       : { published: true };
 
+    const rawLimit = req.query.limit;
+    const cursorCreatedAt = req.query.cursorCreatedAt;
+    const cursorId = req.query.cursorId;
+    const limit = rawLimit ? Number(rawLimit) : null;
+
+    if (rawLimit && (!Number.isFinite(limit) || limit <= 0)) {
+      return res.status(400).json({ message: "Invalid limit" });
+    }
+
+    const isPaginated = Boolean(limit || cursorCreatedAt || cursorId);
+    const hasCursor = Boolean(cursorCreatedAt || cursorId);
+
+    if (hasCursor && (!cursorCreatedAt || !cursorId)) {
+      return res
+        .status(400)
+        .json({ message: "Cursor must include createdAt and id" });
+    }
+
+    if (!isPaginated) {
+      const posts = await prisma.post.findMany({
+        where: whereCondition,
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return res.json(posts);
+    }
+
+    const safeLimit = limit || 8;
+    const cursorDate = cursorCreatedAt ? new Date(cursorCreatedAt) : null;
+
+    if (cursorCreatedAt && Number.isNaN(cursorDate?.getTime?.())) {
+      return res.status(400).json({ message: "Invalid cursor createdAt" });
+    }
+
+    const paginationFilter = cursorDate
+      ? {
+          OR: [
+            { createdAt: { lt: cursorDate } },
+            { createdAt: cursorDate, id: { lt: cursorId } },
+          ],
+        }
+      : {};
+
     const posts = await prisma.post.findMany({
-      where: whereCondition,
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { ...whereCondition, ...paginationFilter },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: safeLimit + 1,
     });
 
-    res.json(posts);
+    const hasMore = posts.length > safeLimit;
+    const items = hasMore ? posts.slice(0, safeLimit) : posts;
+    const lastPost = items[items.length - 1];
+    const nextCursor = lastPost
+      ? { createdAt: lastPost.createdAt, id: lastPost.id }
+      : null;
+    return res.json({ items, nextCursor, hasMore });
   } catch (error) {
     if (
       error.message &&
       error.message.includes("Can't reach database server")
     ) {
       const isAdmin = req.user && req.user.isAdmin;
-      const fallback = isAdmin
+      const rawLimit = req.query.limit;
+      const cursorCreatedAt = req.query.cursorCreatedAt;
+      const cursorId = req.query.cursorId;
+      const limit = rawLimit ? Number(rawLimit) : null;
+      const isPaginated = Boolean(limit || cursorCreatedAt || cursorId);
+      const safeLimit = limit || 8;
+
+      const visibleFallback = isAdmin
         ? fallbackPosts
         : fallbackPosts.filter((post) => post.published);
-      return res.json(fallback);
+
+      if (!isPaginated) {
+        return res.json(visibleFallback);
+      }
+
+      const sortedFallback = [...visibleFallback].sort((a, b) => {
+        const dateDiff = new Date(b.createdAt) - new Date(a.createdAt);
+        if (dateDiff !== 0) return dateDiff;
+        return String(b.id).localeCompare(String(a.id));
+      });
+
+      let filteredFallback = sortedFallback;
+      if (cursorCreatedAt && cursorId) {
+        const cursorDate = new Date(cursorCreatedAt);
+        filteredFallback = sortedFallback.filter((post) => {
+          const postDate = new Date(post.createdAt);
+          return (
+            postDate < cursorDate ||
+            (postDate.getTime() === cursorDate.getTime() &&
+              String(post.id) < String(cursorId))
+          );
+        });
+      }
+
+      const pageItems = filteredFallback.slice(0, safeLimit + 1);
+      const hasMore = pageItems.length > safeLimit;
+      const items = hasMore ? pageItems.slice(0, safeLimit) : pageItems;
+      const lastPost = items[items.length - 1];
+      const nextCursor = lastPost
+        ? { createdAt: lastPost.createdAt, id: lastPost.id }
+        : null;
+
+      return res.json({ items, nextCursor, hasMore });
     }
 
     res
