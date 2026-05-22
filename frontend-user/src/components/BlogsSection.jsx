@@ -10,13 +10,18 @@ const getReadTime = (content) => {
 function BlogsSection() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
-        const data = await fetchPosts();
-        setPosts(data);
+        const data = await fetchPosts({ limit: 8 });
+        setPosts(data.items || []);
+        setNextCursor(data.nextCursor || null);
+        setHasMore(Boolean(data.hasMore));
         setLoading(false);
       } catch (err) {
         console.log(err);
@@ -28,9 +33,25 @@ function BlogsSection() {
     loadPosts();
   }, []);
 
+  const handleLoadMore = async () => {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await fetchPosts({ limit: 8, cursor: nextCursor });
+      setPosts((prev) => [...prev, ...(data.items || [])]);
+      setNextCursor(data.nextCursor || null);
+      setHasMore(Boolean(data.hasMore));
+    } catch (err) {
+      console.log(err);
+      setError("Failed to load more posts");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   if (loading)
     return <div className="text-center mt-10 text-text">Loading...</div>;
-  if (error)
+  if (error && posts.length === 0)
     return <div className="text-center mt-10 text-danger">{error}</div>;
 
   return (
@@ -61,6 +82,22 @@ function BlogsSection() {
           </Link>
         ))}
       </div>
+      {error && posts.length > 0 && (
+        <div className="text-center text-danger mt-4">{error}</div>
+      )}
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="flex items-center gap-2 text-muted hover:text-accent transition-colors disabled:opacity-60"
+            aria-label="Load more posts"
+          >
+            {loadingMore ? "Loading..." : "Load more"} &darr;
+          </button>
+        </div>
+      )}
     </div>
   );
 }
