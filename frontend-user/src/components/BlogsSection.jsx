@@ -91,10 +91,26 @@ function BlogsSection() {
             type="button"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="flex items-center gap-2 text-muted hover:text-accent transition-colors disabled:opacity-60"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-full border border-border bg-surface text-muted hover:text-accent hover:border-accent transition-colors disabled:opacity-60"
             aria-label="Load more posts"
           >
-            {loadingMore ? "Loading..." : "Load more"} &darr;
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className={`w-6 h-6 ${loadingMore ? "animate-bounce" : ""}`}
+            >
+              <path
+                d="M6 9l6 6 6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="pointer-events-none absolute -top-8 whitespace-nowrap rounded-md border border-border bg-surface px-2 py-1 text-xs text-muted opacity-0 transition-opacity group-hover:opacity-100">
+              {loadingMore ? "Loading more" : "Load more"}
+            </span>
           </button>
         </div>
       )}
