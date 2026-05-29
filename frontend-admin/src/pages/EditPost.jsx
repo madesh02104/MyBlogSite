@@ -299,7 +299,7 @@ const x = 10;
                           </code>
                         );
                       },
-                      a({ node, children, ...props }) {
+                      a({ _node, children, ...props }) {
                         return (
                           <a
                             target="_blank"

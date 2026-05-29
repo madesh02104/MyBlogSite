@@ -150,7 +150,7 @@ function SingleBlogPage() {
                   />
                 );
               },
-              a({ node, children, ...props }) {
+              a({ _node, children, ...props }) {
                 return (
                   <a
                     target="_blank"
