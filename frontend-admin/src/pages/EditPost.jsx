@@ -253,7 +253,21 @@ function EditPost() {
               onChange={(e) => setContent(e.target.value)}
               rows="12"
               className="w-full bg-gray-700 border border-gray-600 p-2 rounded-md text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent font-mono"
-              placeholder="Write your post content here using Markdown..."
+              placeholder="Write your post content here using Markdown...
+
+# Heading 1
+## Heading 2
+**bold text**
+*italic text*
+`inline code`
+[link text](https://google.com)
+
+```javascript
+// code block
+const x = 10;
+```
+
+> Blockquote"
               required
             ></textarea>
             {showPreview && (
@@ -283,6 +297,18 @@ function EditPost() {
                           >
                             {children}
                           </code>
+                        );
+                      },
+                      a({ node, children, ...props }) {
+                        return (
+                          <a
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-violet-400 hover:text-violet-300 underline"
+                            {...props}
+                          >
+                            {children}
+                          </a>
                         );
                       },
                     }}

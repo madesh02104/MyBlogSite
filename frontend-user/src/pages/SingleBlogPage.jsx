@@ -150,6 +150,18 @@ function SingleBlogPage() {
                   />
                 );
               },
+              a({ node, children, ...props }) {
+                return (
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent hover:text-accent-strong underline"
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                );
+              },
             }}
           >
             {blog.content}

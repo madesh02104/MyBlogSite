@@ -168,6 +168,7 @@ function CreatePost() {
 **bold text**
 *italic text*
 `inline code`
+[link text](https://google.com)
 
 ```javascript
 // code block
@@ -204,6 +205,18 @@ const x = 10;
                           >
                             {children}
                           </code>
+                        );
+                      },
+                      a({ node, children, ...props }) {
+                        return (
+                          <a
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-violet-400 hover:text-violet-300 underline"
+                            {...props}
+                          >
+                            {children}
+                          </a>
                         );
                       },
                     }}
