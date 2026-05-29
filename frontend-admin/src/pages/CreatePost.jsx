@@ -210,10 +210,10 @@ const x = 10;
                       a({ _node, children, ...props }) {
                         return (
                           <a
+                            {...props}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-violet-400 hover:text-violet-300 underline"
-                            {...props}
+                            className={`text-violet-400 hover:text-violet-300 underline ${props.className || ""}`}
                           >
                             {children}
                           </a>

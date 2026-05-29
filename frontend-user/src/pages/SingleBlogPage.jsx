@@ -153,10 +153,10 @@ function SingleBlogPage() {
               a({ _node, children, ...props }) {
                 return (
                   <a
+                    {...props}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-accent-strong underline"
-                    {...props}
+                    className={`text-accent hover:text-accent-strong underline ${props.className || ""}`}
                   >
                     {children}
                   </a>
